@@ -1,11 +1,15 @@
 const csv = require("csv-parser");
 const fs = require("fs");
-const moment = require("moment");
-const arr = [];
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
-const filename = "central_hudson.csv"//change file name here
+const moment = require("moment");
+
+const arr = [];
+//change file name here
+const inputFilename = process.argv[2] || "central_hudson.csv";
+const outputFilename = process.argv[3] || "central_hudson.prn";
+
 const csvWriter = createCsvWriter({
-  path: "central_hudson.prn",
+  path: outputFilename,
   header: [
     { id: "Name", title: "Name" },
     { id: "Time Stamp", title: "Time Stamp" },
@@ -15,23 +19,25 @@ const csvWriter = createCsvWriter({
     { id: "LBMP ($/MWHr)", title: "LBMP ($/MWHr)" }
   ]
 });
-fs.createReadStream(filename)
+
+//Reading csv file 
+fs.createReadStream(inputFilename)
   .pipe(csv())
   .on("data", row => {
-    var date = moment(row["Time Stamp"]);
-    console.log(date.format('hhmm'))
     arr.push(row);
   })
   .on("end", () => {
-    process(arr);
+    processArray(arr);
   });
 
-function process(arr) {
+//Process file 
+function processArray(arr) {
   var result = [];
+
   arr.forEach(row => {
-    var pickedDate = moment(new Date(row["Time Stamp"]));
-    const time = pickedDate.format('HHmm')
-    var name = row["Name"];
+    let pickedDate = moment(new Date(row["Time Stamp"]));
+    let time = pickedDate.format("HHmm");
+    let name = row["Name"];
     if (name == "HUD VL") {
       name = "HUD_VL";
     } else if (name == "MHK VL") {
@@ -42,30 +48,30 @@ function process(arr) {
       name = "H_Q";
     }
     row["Time Stamp"] = pickedDate.format("DDMMYY");
-   
+
     row["Time"] = time;
     row["Name"] = "NYISO_DAYAHEAD_" + name;
-  });
-  arr.forEach(row => {
     row["Unit"] = "kw";
     row["Interval"] = 60;
     delete row["Marginal Cost Congestion ($/MWHr)"];
     delete row["Marginal Cost Losses ($/MWHr)"];
     delete row["PTID"];
   });
+
   arr.forEach(row => {
     result.push({
-      "Name": row["Name"],
+      Name: row["Name"],
       "Time Stamp": row["Time Stamp"],
-      "Time": row["Time"],
-      "Interval": row["Interval"],
-      "Unit": row["Unit"],
+      Time: row["Time"],
+      Interval: row["Interval"],
+      Unit: row["Unit"],
       "LBMP ($/MWHr)": row["LBMP ($/MWHr)"]
     });
   });
-  console.log(result);
+  console.log(result.length+ " rows processed");
 
+  //write to file
   csvWriter
     .writeRecords(result)
-    .then(() => console.log("The CSV file was written successfully"));
+    .then(() => console.log("prn file "+ outputFilename + " successfully"));
 }

@@ -3,9 +3,12 @@ const fs = require("fs");
 const moment = require("moment");
 const arr = [];
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+const inputFilename = process.argv[2] || "tcnj.csv";
+const outputFilename = process.argv[3] || "tcnj.prn";
 
+//writer config
 const csvWriter = createCsvWriter({
-  path: "tcnj.prn",
+  path: outputFilename,
   header: [
     { id: "Name", title: "Name" },
     { id: "Time Stamp", title: "Time Stamp" },
@@ -13,37 +16,46 @@ const csvWriter = createCsvWriter({
     { id: "Interval", title: "Interval" },
     { id: "Unit", title: "Unit" },
     {
-      id: "PEGSRVR.COGEN#Block Demand Real Power#kW",
-      title: "PEGSRVR.COGEN#Block Demand Real Power#kW"
+      id: "Power",
+      title: "Power"
     },
     { id: "x", title: "x" },
     { id: "y", title: "y" },
     { id: "z", title: "z" }
   ]
 });
-fs.createReadStream("tcnj.csv")
+
+//Read the file
+fs.createReadStream(inputFilename)
   .pipe(csv())
   .on("data", row => {
     arr.push(row);
   })
   .on("end", () => {
-    process(arr);
+    processArray(arr);
   });
 
-function process(arr) {
-  var result = [];
+//process the file
+function processArray(arr) {
+  let result = [];
+  arr.forEach(row => {});
   arr.forEach(row => {
-    var date = moment(new Date(row["Timestamp"]));
-    const time = date.format("HHmm");
-    var name = "tcnj_COGEN_kw"; //manually input name of the meter here
-    row["Time Stamp"] = date.format("MMDDYY");
+    let date = moment(new Date(row["Timestamp"]));
+    let time = date.format("HHmm");
+    let name = "tcnj_COGEN_kw"; //manually input name of the meter here
 
+    row["Time Stamp"] = date.format("MMDDYY");
     row["Time"] = time;
     row["Name"] = name;
-  });
-  arr.forEach(row => {
     row["Unit"] = "kw";
-    row["Interval"] = 15; //change interval here
+    row["Interval"] = 15;
+
+    //remove comma 4,688.50 = 4688.50
+    let splitArr = row["PEGSRVR.COGEN#Block Demand Real Power#kW"].split(",");
+    let fullPowerValue = splitArr[0]+splitArr[1];
+
+    row["Power"] = parseFloat(fullPowerValue);
+    //  console.log(typeof row["Power"])
   });
   arr.forEach(row => {
     result.push({
@@ -52,22 +64,16 @@ function process(arr) {
       Time: row["Time"],
       Interval: row["Interval"],
       Unit: row["Unit"],
-      "PEGSRVR.COGEN#Block Demand Real Power#kW":
-        row["PEGSRVR.COGEN#Block Demand Real Power#kW"],
+      Power: row["Power"],
       x: 0,
       y: 0,
       z: 0
     });
   });
-  //   console.log(result);
+  console.log(result.length+ " rows processed");
 
-  //   const fastcsv = require("fast-csv");
-  //   const ws = fs.createWriteStream("out.csv");
-  //   fastcsv.write(result, { headers: true }).pipe(ws);
-
+  //write to file
   csvWriter
     .writeRecords(result)
-    .then(() => console.log("The CSV file was written successfully"));
-  //   console.log(arr);
+    .then(() => console.log("PRN file "+ outputFilename + " successfully"));
 }
- 
