@@ -3,7 +3,7 @@ const fs = require("fs");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const moment = require("moment");
 
-const arr = [];
+var arr = [];
 //change file name here
 const inputFilename = process.argv[2] || "central_hudson.csv";
 const outputFilename = process.argv[3] || "central_hudson.prn";
@@ -32,7 +32,7 @@ fs.createReadStream(inputFilename)
 
 //Process file 
 function processArray(arr) {
-  var result = [];
+  let result = [];
 
   arr.forEach(row => {
     let pickedDate = moment(new Date(row["Time Stamp"]));
@@ -43,9 +43,9 @@ function processArray(arr) {
     } else if (name == "MHK VL") {
       name = "MHK_VL";
     } else if (name == "O H") {
-      name = "O_H";
+      name = "OH";
     } else if (name == "H Q") {
-      name = "H_Q";
+      name = "HQ";
     }
     row["Time Stamp"] = pickedDate.format("DDMMYY");
 
@@ -73,5 +73,5 @@ function processArray(arr) {
   //write to file
   csvWriter
     .writeRecords(result)
-    .then(() => console.log("prn file "+ outputFilename + " successfully"));
+    .then(() => console.log("PRN file "+ outputFilename + " successfully"));
 }
