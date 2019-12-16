@@ -52,7 +52,7 @@ function processArray(arr) {
 
     //remove comma 4,688.50 = 4688.50
     let splitArr = row["PEGSRVR.COGEN#Block Demand Real Power#kW"].split(",");
-    let fullPowerValue = splitArr[0]+splitArr[1];
+    let fullPowerValue = splitArr[0] + splitArr[1];
 
     row["Power"] = parseFloat(fullPowerValue);
     //  console.log(typeof row["Power"])
@@ -70,10 +70,10 @@ function processArray(arr) {
       z: 0
     });
   });
-  console.log(result.length+ " rows processed");
+  console.log(result.length + " rows processed");
 
   //write to file
   csvWriter
     .writeRecords(result)
-    .then(() => console.log("PRN file "+ outputFilename + " successfully"));
+    .then(() => console.log("PRN file " + outputFilename + " successfully"));
 }

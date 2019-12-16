@@ -4,6 +4,7 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const moment = require("moment");
 
 var arr = [];
+
 //change file name here
 const inputFilename = process.argv[2] || "central_hudson.csv";
 const outputFilename = process.argv[3] || "central_hudson.prn";
@@ -20,7 +21,7 @@ const csvWriter = createCsvWriter({
   ]
 });
 
-//Reading csv file 
+//Reading csv file
 fs.createReadStream(inputFilename)
   .pipe(csv())
   .on("data", row => {
@@ -30,7 +31,7 @@ fs.createReadStream(inputFilename)
     processArray(arr);
   });
 
-//Process file 
+//Process file
 function processArray(arr) {
   let result = [];
 
@@ -68,10 +69,10 @@ function processArray(arr) {
       "LBMP ($/MWHr)": row["LBMP ($/MWHr)"]
     });
   });
-  console.log(result.length+ " rows processed");
+  console.log(JSON.stringify(result) + " rows processed");
 
   //write to file
   csvWriter
     .writeRecords(result)
-    .then(() => console.log("PRN file "+ outputFilename + " successfully"));
+    .then(() => console.log("PRN file " + outputFilename + " successfully"));
 }
